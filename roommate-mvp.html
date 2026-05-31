@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>RoomMate — Найди жильё в СНГ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bord:#7B1D2E;--bord2:#9B2335;--bord-deep:#5C1522;
+  --beige:#F5EFE6;--beige2:#EDE3D5;--beige3:#D9CCBA;
+  --cream:#FDFAF6;--ink:#1C1208;--ink2:#2E1F10;
+  --gray:#7A6A5A;--gray2:#A0907F;--white:#FFF;
+  --border:#E8DECE;--gold:#C9973A;--r:16px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden}
+
+/* ── UTILS ── */
+.hidden{display:none!important}
+.page{display:none;min-height:100vh}
+.page.active{display:block}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;transition:all .3s;background:rgba(253,250,246,.96);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
+.nav-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}
+.logo-mark{width:38px;height:38px;border-radius:10px;background:var(--bord);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 12px rgba(123,29,46,.28)}
+.logo-text{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:var(--ink)}
+.logo-text span{color:var(--bord)}
+.nav-links{display:flex;gap:28px;list-style:none}
+.nav-links a{font-size:14px;font-weight:600;color:var(--gray);text-decoration:none;cursor:pointer;transition:color .2s}
+.nav-links a:hover{color:var(--bord)}
+.nav-right{display:flex;gap:10px;align-items:center}
+.btn-ghost{padding:8px 18px;border-radius:10px;border:1.5px solid var(--border);background:transparent;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-ghost:hover{border-color:var(--bord);color:var(--bord)}
+.btn-bord{padding:8px 20px;border-radius:10px;background:var(--bord);color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(123,29,46,.25);transition:all .2s}
+.btn-bord:hover{background:var(--bord2);transform:translateY(-1px)}
+.nav-user{display:flex;align-items:center;gap:10px}
+.nav-avatar{width:34px;height:34px;border-radius:50%;background:var(--beige2);border:2px solid var(--border);cursor:pointer;object-fit:cover;font-size:16px;display:flex;align-items:center;justify-content:center}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none}
+.hamburger span{width:22px;height:2px;background:var(--ink);border-radius:2px;display:block}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--ink);color:#fff;padding:13px 18px;border-radius:12px;font-size:14px;font-weight:600;transform:translateY(80px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);max-width:300px;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* ── MODAL BASE ── */
+.overlay{position:fixed;inset:0;background:rgba(16,5,8,.65);backdrop-filter:blur(6px);display:none;place-items:center;z-index:800;padding:20px}
+.overlay.open{display:grid}
+.modal{background:#fff;border-radius:24px;padding:36px;width:100%;max-width:460px;position:relative;animation:scaleIn .28s ease;max-height:90vh;overflow-y:auto}
+.modal-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:8px;background:var(--beige);border:none;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gray)}
+.modal h2{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.modal-sub{color:var(--gray);font-size:14px;margin-bottom:22px}
+.tab-row{display:flex;gap:4px;background:var(--beige);border-radius:10px;padding:3px;margin-bottom:20px}
+.m-tab{flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;border:none;background:transparent;font-family:inherit;color:var(--gray)}
+.m-tab.active{background:#fff;color:var(--bord);box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.mf{margin-bottom:14px}
+.mf label{display:block;font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.mf input,.mf select,.mf textarea{width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--border);font-size:14px;font-family:inherit;color:var(--ink);background:var(--cream);transition:border .2s;appearance:none}
+.mf textarea{resize:vertical;min-height:90px}
+.mf input:focus,.mf select:focus,.mf textarea:focus{outline:none;border-color:var(--bord);box-shadow:0 0 0 3px rgba(123,29,46,.08)}
+.btn-sub{width:100%;padding:13px;border-radius:10px;background:var(--bord);color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .2s;margin-top:4px}
+.btn-sub:hover{background:var(--bord2)}
+.btn-sub:disabled{opacity:.6;cursor:not-allowed}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.err-msg{color:#c0392b;font-size:12px;margin-top:4px;display:none}
+
+/* ── HERO PAGE ── */
+.hero{min-height:100vh;display:flex;align-items:center;padding:80px 24px 60px;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--cream) 0%,var(--beige) 55%,#FDF6EE 100%)}
+.orb{position:absolute;border-radius:50%;pointer-events:none}
+.orb1{width:600px;height:600px;background:radial-gradient(circle,rgba(123,29,46,.07) 0%,transparent 70%);top:-200px;right:-100px;animation:orbF 9s ease-in-out infinite}
+.orb2{width:400px;height:400px;background:radial-gradient(circle,rgba(201,151,58,.06) 0%,transparent 70%);bottom:-120px;left:-60px;animation:orbF 11s 2s ease-in-out infinite reverse}
+.hero-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;position:relative;z-index:1;width:100%}
+.hero-kicker{display:inline-flex;align-items:center;gap:8px;background:rgba(123,29,46,.08);border:1px solid rgba(123,29,46,.15);padding:6px 14px;border-radius:28px;margin-bottom:20px;animation:fadeUp .5s ease both}
+.kicker-dot{width:7px;height:7px;border-radius:50%;background:var(--bord);animation:blink 2s infinite}
+.kicker-text{font-size:11px;font-weight:700;color:var(--bord);letter-spacing:.6px;text-transform:uppercase}
+.hero-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(38px,5vw,68px);font-weight:700;line-height:1.06;color:var(--ink);animation:fadeUp .5s .1s ease both}
+.hero-h1 em{color:var(--bord);font-style:italic}
+.hero-sub{font-size:16px;color:var(--gray);line-height:1.75;margin:18px 0 30px;animation:fadeUp .5s .2s ease both}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;animation:fadeUp .5s .3s ease both}
+.btn-main{padding:14px 28px;border-radius:12px;background:var(--bord);color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .25s;box-shadow:0 6px 18px rgba(123,29,46,.28);display:inline-flex;align-items:center;gap:8px}
+.btn-main:hover{background:var(--bord2);transform:translateY(-2px);box-shadow:0 10px 24px rgba(123,29,46,.35)}
+.btn-sec{padding:14px 24px;border-radius:12px;background:transparent;color:var(--ink);font-size:15px;font-weight:600;border:1.5px solid var(--border);cursor:pointer;font-family:inherit;transition:all .25s}
+.btn-sec:hover{border-color:var(--bord);color:var(--bord);transform:translateY(-2px)}
+.hero-trust{display:flex;align-items:center;gap:12px;margin-top:22px;animation:fadeUp .5s .4s ease both}
+.trust-avs{display:flex}
+.trust-avs img{width:30px;height:30px;border-radius:50%;border:2px solid var(--cream);margin-left:-9px;object-fit:cover}
+.trust-avs img:first-child{margin-left:0}
+.trust-txt{font-size:13px;color:var(--gray)}
+.trust-txt strong{color:var(--ink);font-weight:800}
+/* hero card */
+.hero-visual{position:relative;animation:fadeLeft .6s .2s ease both}
+.hv-card{background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 22px 56px rgba(123,29,46,.13)}
+.hv-img{height:280px;overflow:hidden}
+.hv-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.hv-card:hover .hv-img img{transform:scale(1.04)}
+.hv-body{padding:20px}
+.hv-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.hv-title{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:var(--ink);line-height:1.3}
+.hv-price{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--bord);white-space:nowrap}
+.hv-price em{font-size:12px;font-style:normal;color:var(--gray);font-family:'Plus Jakarta Sans',sans-serif}
+.hv-tags{display:flex;gap:6px;flex-wrap:wrap}
+.hv-tag{padding:4px 10px;border-radius:16px;font-size:11px;font-weight:700;background:var(--beige);color:var(--bord)}
+.fw{position:absolute;background:#fff;border-radius:14px;padding:11px 15px;box-shadow:0 6px 24px rgba(123,29,46,.12);display:flex;align-items:center;gap:10px}
+.fw1{top:-16px;right:-8px;animation:floatY 4s ease-in-out infinite}
+.fw2{bottom:-16px;left:-8px;animation:floatY 4s 1.5s ease-in-out infinite}
+.fw-ico{font-size:22px}
+.fw-val{font-size:13px;font-weight:800;color:var(--ink)}
+.fw-lbl{font-size:11px;color:var(--gray)}
+.fw-badge{background:var(--bord);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;margin-top:1px;display:inline-block}
+
+/* ── SEARCH BAR ── */
+.search-bar-section{padding:0 24px 60px}
+.search-bar-inner{max-width:1280px;margin:0 auto}
+.search-box{background:#fff;border-radius:20px;box-shadow:0 6px 40px rgba(123,29,46,.09);padding:26px;border:1px solid var(--border)}
+.search-grid{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px;align-items:end}
+.sf-lbl{font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
+.sf-in,.sf-sel{width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--border);font-size:14px;font-family:inherit;color:var(--ink);background:var(--cream);transition:border .2s;appearance:none}
+.sf-in:focus,.sf-sel:focus{outline:none;border-color:var(--bord);box-shadow:0 0 0 3px rgba(123,29,46,.07)}
+.sf-btn{padding:11px 24px;background:var(--bord);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;box-shadow:0 4px 12px rgba(123,29,46,.25)}
+.sf-btn:hover{background:var(--bord2);transform:translateY(-1px)}
+.search-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.s-tag{padding:5px 13px;border-radius:18px;font-size:12px;font-weight:700;color:var(--gray);border:1px solid var(--border);background:#fff;cursor:pointer;transition:all .2s}
+.s-tag:hover,.s-tag.active{background:var(--bord);color:#fff;border-color:var(--bord)}
+
+/* ── LISTINGS PAGE ── */
+.page-header{max-width:1280px;margin:0 auto;padding:90px 24px 32px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:700;color:var(--ink)}
+.page-title em{color:var(--bord);font-style:italic}
+.page-sub{font-size:14px;color:var(--gray);margin-top:4px}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{padding:7px 16px;border-radius:18px;font-size:13px;font-weight:700;border:1.5px solid var(--border);color:var(--gray);background:#fff;cursor:pointer;transition:all .2s}
+.pill.active,.pill:hover{background:var(--bord);color:#fff;border-color:var(--bord)}
+
+.listings-wrap{max-width:1280px;margin:0 auto;padding:0 24px 80px}
+.cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.lc{background:#fff;border-radius:18px;border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:transform .3s,box-shadow .3s}
+.lc:hover{transform:translateY(-5px);box-shadow:0 18px 44px rgba(123,29,46,.11)}
+.lc-img{height:200px;overflow:hidden;position:relative}
+.lc-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.lc:hover .lc-img img{transform:scale(1.06)}
+.lc-badges{position:absolute;top:10px;left:10px;display:flex;gap:5px}
+.lc-badge{padding:3px 9px;border-radius:7px;font-size:10px;font-weight:700;backdrop-filter:blur(8px)}
+.b-v{background:rgba(123,29,46,.88);color:#fff}
+.b-h{background:rgba(201,151,58,.92);color:#fff}
+.b-n{background:rgba(255,255,255,.9);color:var(--ink)}
+.b-t{background:rgba(245,239,230,.92);color:var(--bord)}
+.lc-heart{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.9);border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:transform .2s}
+.lc-heart:hover{transform:scale(1.2)}
+.lc-body{padding:16px}
+.lc-loc{font-size:12px;color:var(--gray);font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.lc-title{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:10px}
+.lc-feats{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.lc-feat{font-size:12px;color:var(--gray);display:flex;align-items:center;gap:3px}
+.lc-foot{display:flex;justify-content:space-between;align-items:center}
+.lc-price{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--bord)}
+.lc-price em{font-size:11px;font-style:normal;color:var(--gray);font-family:'Plus Jakarta Sans',sans-serif}
+.lc-rat{font-size:13px;font-weight:700;color:var(--gold)}
+
+/* ── LISTING DETAIL ── */
+.detail-wrap{max-width:1100px;margin:0 auto;padding:90px 24px 80px}
+.detail-back{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--gray);cursor:pointer;margin-bottom:24px;background:none;border:none;font-family:inherit;transition:color .2s}
+.detail-back:hover{color:var(--bord)}
+.detail-grid{display:grid;grid-template-columns:1fr 380px;gap:40px;align-items:start}
+.detail-imgs{border-radius:20px;overflow:hidden;height:400px}
+.detail-imgs img{width:100%;height:100%;object-fit:cover}
+.detail-info{}
+.detail-badges{display:flex;gap:8px;margin-bottom:14px}
+.detail-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--ink);line-height:1.2;margin-bottom:8px}
+.detail-loc{font-size:14px;color:var(--gray);display:flex;align-items:center;gap:6px;margin-bottom:16px}
+.detail-price-row{display:flex;align-items:baseline;gap:8px;margin-bottom:20px;padding:16px;background:var(--beige);border-radius:14px}
+.detail-price{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:700;color:var(--bord)}
+.detail-price em{font-size:14px;font-style:normal;color:var(--gray);font-family:'Plus Jakarta Sans',sans-serif}
+.detail-feats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.detail-feat{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#fff;border-radius:10px;border:1px solid var(--border);font-size:13px;font-weight:600;color:var(--ink)}
+.detail-desc{font-size:14px;color:var(--gray);line-height:1.75;margin-bottom:22px}
+.detail-owner{display:flex;align-items:center;gap:14px;padding:16px;background:#fff;border-radius:14px;border:1px solid var(--border);margin-bottom:16px}
+.owner-avatar{width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid var(--border);font-size:24px;display:flex;align-items:center;justify-content:center;background:var(--beige)}
+.owner-name{font-size:15px;font-weight:700;color:var(--ink)}
+.owner-sub{font-size:12px;color:var(--gray);margin-top:2px}
+.detail-btns{display:flex;flex-direction:column;gap:10px}
+.btn-contact{width:100%;padding:14px;border-radius:12px;background:var(--bord);color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .2s;box-shadow:0 4px 14px rgba(123,29,46,.25)}
+.btn-contact:hover{background:var(--bord2)}
+.btn-fav{width:100%;padding:13px;border-radius:12px;background:transparent;color:var(--ink);font-size:14px;font-weight:700;border:1.5px solid var(--border);cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-fav:hover{border-color:var(--bord);color:var(--bord)}
+
+/* ── PROFILE PAGE ── */
+.profile-wrap{max-width:1100px;margin:0 auto;padding:90px 24px 80px}
+.profile-header{display:flex;align-items:center;gap:24px;padding:28px;background:#fff;border-radius:20px;border:1px solid var(--border);margin-bottom:28px;box-shadow:var(--shadow)}
+.profile-avatar{width:80px;height:80px;border-radius:50%;background:var(--beige2);border:3px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:36px}
+.profile-name{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--ink)}
+.profile-email{font-size:14px;color:var(--gray);margin-top:4px}
+.profile-badge{display:inline-flex;align-items:center;gap:6px;background:var(--beige);color:var(--bord);font-size:12px;font-weight:700;padding:4px 12px;border-radius:16px;margin-top:8px}
+.profile-tabs{display:flex;gap:4px;background:var(--beige);border-radius:12px;padding:4px;margin-bottom:24px}
+.p-tab{flex:1;padding:10px;text-align:center;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;border:none;background:transparent;font-family:inherit;color:var(--gray)}
+.p-tab.active{background:#fff;color:var(--bord);box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.p-section{display:none}
+.p-section.active{display:block}
+.empty-state{text-align:center;padding:60px 20px;color:var(--gray)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-title{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:8px}
+.empty-sub{font-size:14px;line-height:1.6}
+
+/* ── CHAT ── */
+.chat-wrap{max-width:1100px;margin:0 auto;padding:90px 24px 80px}
+.chat-layout{display:grid;grid-template-columns:300px 1fr;gap:0;background:#fff;border-radius:20px;border:1px solid var(--border);overflow:hidden;height:calc(100vh - 180px);min-height:500px}
+.chat-list{border-right:1px solid var(--border);overflow-y:auto}
+.chat-list-header{padding:18px 16px;border-bottom:1px solid var(--border)}
+.chat-list-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--ink)}
+.chat-item{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background .2s;border-bottom:1px solid var(--border)}
+.chat-item:hover,.chat-item.active{background:var(--beige)}
+.chat-avatar{width:42px;height:42px;border-radius:50%;background:var(--beige2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.chat-name{font-size:14px;font-weight:700;color:var(--ink)}
+.chat-preview{font-size:12px;color:var(--gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.chat-time{font-size:11px;color:var(--gray2);margin-left:auto;flex-shrink:0}
+.chat-unread{width:18px;height:18px;border-radius:50%;background:var(--bord);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-left:auto;flex-shrink:0}
+.chat-main{display:flex;flex-direction:column}
+.chat-main-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.chat-main-name{font-size:16px;font-weight:700;color:var(--ink)}
+.chat-main-status{font-size:12px;color:var(--gray);display:flex;align-items:center;gap:4px}
+.chat-main-status::before{content:'';width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block}
+.chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:68%;display:flex;flex-direction:column;gap:4px}
+.msg.mine{align-self:flex-end;align-items:flex-end}
+.msg.theirs{align-self:flex-start}
+.msg-bubble{padding:11px 15px;border-radius:16px;font-size:14px;line-height:1.55}
+.msg.mine .msg-bubble{background:var(--bord);color:#fff;border-bottom-right-radius:4px}
+.msg.theirs .msg-bubble{background:var(--beige);color:var(--ink);border-bottom-left-radius:4px}
+.msg-time{font-size:11px;color:var(--gray2)}
+.chat-input-row{padding:14px 16px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center}
+.chat-input{flex:1;padding:11px 16px;border-radius:12px;border:1.5px solid var(--border);font-size:14px;font-family:inherit;color:var(--ink);background:var(--cream);transition:border .2s;resize:none}
+.chat-input:focus{outline:none;border-color:var(--bord)}
+.chat-send{width:42px;height:42px;border-radius:12px;background:var(--bord);border:none;color:#fff;cursor:pointer;font-size:18px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.chat-send:hover{background:var(--bord2)}
+.chat-empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--gray)}
+
+/* ── ADD LISTING ── */
+.add-wrap{max-width:800px;margin:0 auto;padding:90px 24px 80px}
+.add-title{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.add-title em{color:var(--bord);font-style:italic}
+.add-sub{font-size:14px;color:var(--gray);margin-bottom:32px}
+.add-card{background:#fff;border-radius:20px;border:1px solid var(--border);padding:32px;box-shadow:0 4px 28px rgba(123,29,46,.06)}
+.add-section-title{font-size:16px;font-weight:800;color:var(--ink);margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.img-upload{border:2px dashed var(--beige3);border-radius:14px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:6px}
+.img-upload:hover{border-color:var(--bord);background:var(--beige)}
+.img-upload-icon{font-size:36px;margin-bottom:8px}
+.img-upload-text{font-size:14px;font-weight:600;color:var(--gray)}
+.img-upload-sub{font-size:12px;color:var(--gray2);margin-top:4px}
+.img-previews{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.img-preview{width:80px;height:80px;border-radius:10px;object-fit:cover;border:1px solid var(--border)}
+
+/* ── STATS ── */
+.stats-section{background:var(--bord-deep);padding:60px 24px}
+.stats-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;border-radius:20px;overflow:hidden}
+.stat-block{background:var(--bord);padding:34px 24px;transition:background .2s;position:relative;overflow:hidden}
+.stat-block:hover{background:var(--bord2)}
+.stat-block::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--gold);transform:scaleX(0);transition:transform .3s;transform-origin:left}
+.stat-block:hover::after{transform:scaleX(1)}
+.stat-flag{font-size:24px;margin-bottom:10px;display:block}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:46px;font-weight:700;color:#fff;line-height:1;margin-bottom:6px}
+.stat-num .plus{color:var(--gold)}
+.stat-lbl{font-size:13px;color:rgba(255,255,255,.55);line-height:1.4}
+
+/* ── FEATURES ── */
+.feats-section{padding:70px 24px}
+.feats-inner{max-width:1280px;margin:0 auto}
+.s-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--bord);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px}
+.s-eyebrow::before{content:'';width:16px;height:2px;background:var(--bord);border-radius:2px}
+.s-title{font-family:'Cormorant Garamond',serif;font-size:clamp(26px,4vw,42px);font-weight:700;color:var(--ink);line-height:1.1}
+.s-title em{color:var(--bord);font-style:italic}
+.feats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:40px}
+.feat-card{padding:28px;border-radius:18px;border:1px solid var(--border);background:#fff;transition:all .3s;position:relative;overflow:hidden}
+.feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--bord),var(--gold));transform:scaleX(0);transition:transform .35s;transform-origin:left}
+.feat-card:hover{transform:translateY(-4px);box-shadow:0 14px 40px rgba(123,29,46,.1);border-color:rgba(123,29,46,.15)}
+.feat-card:hover::before{transform:scaleX(1)}
+.feat-ico{font-size:28px;margin-bottom:14px}
+.feat-title{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;color:var(--ink);margin-bottom:8px}
+.feat-desc{font-size:13px;color:var(--gray);line-height:1.65}
+
+/* ── TESTI ── */
+.testi-section{padding:70px 24px;background:var(--bord-deep)}
+.testi-inner{max-width:1280px;margin:0 auto}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:40px}
+.tc{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:26px;transition:all .2s}
+.tc:hover{background:rgba(255,255,255,.08);transform:translateY(-3px)}
+.tc-stars{color:var(--gold);font-size:14px;margin-bottom:10px}
+.tc-text{font-size:14px;color:rgba(255,255,255,.7);line-height:1.7;margin-bottom:16px;font-style:italic}
+.tc-auth{display:flex;align-items:center;gap:10px}
+.tc-av{width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.15)}
+.tc-name{font-size:14px;font-weight:700;color:#fff}
+.tc-loc{font-size:11px;color:rgba(255,255,255,.4);margin-top:1px}
+
+/* ── CTA ── */
+.cta-section{padding:70px 24px}
+.cta-card{max-width:1280px;margin:0 auto;background:linear-gradient(135deg,var(--bord) 0%,var(--bord-deep) 100%);border-radius:28px;padding:60px 48px;text-align:center;position:relative;overflow:hidden}
+.cta-card::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1.5' fill='rgba(255,255,255,0.04)'/%3E%3C/svg%3E") repeat}
+.cta-card h2{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4.5vw,52px);font-weight:700;color:#fff;position:relative;z-index:1;margin-bottom:12px;letter-spacing:-.3px}
+.cta-card p{font-size:16px;color:rgba(255,255,255,.74);position:relative;z-index:1;margin-bottom:30px}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1}
+.btn-cta-w{padding:14px 32px;border-radius:12px;background:var(--beige);color:var(--bord);font-size:15px;font-weight:800;border:none;cursor:pointer;font-family:inherit;transition:all .25s}
+.btn-cta-w:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.btn-cta-o{padding:14px 28px;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;font-size:15px;font-weight:700;border:1.5px solid rgba(255,255,255,.24);cursor:pointer;font-family:inherit;transition:all .25s}
+.btn-cta-o:hover{background:rgba(255,255,255,.18)}
+
+/* ── FOOTER ── */
+footer{background:#100508;color:rgba(255,255,255,.5);padding:50px 24px 22px}
+.foot-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:2.5fr 1fr 1fr 1fr;gap:40px}
+.f-logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:14px;cursor:pointer}
+.f-logo-mark{width:34px;height:34px;border-radius:9px;background:var(--bord);display:flex;align-items:center;justify-content:center;font-size:16px}
+.f-logo-text{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:#fff}
+.f-logo-text span{color:rgba(255,255,255,.5)}
+.f-desc{font-size:13px;line-height:1.75;margin-bottom:20px}
+.f-soc{display:flex;gap:8px}
+.f-sb{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,.07);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:background .2s}
+.f-sb:hover{background:var(--bord)}
+.f-col h4{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.7px;margin-bottom:14px}
+.f-col ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+.f-col a{font-size:13px;color:rgba(255,255,255,.5);text-decoration:none;transition:color .2s;cursor:pointer}
+.f-col a:hover{color:#fff}
+.foot-bot{max-width:1280px;margin:32px auto 0;padding-top:22px;border-top:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;font-size:12px;flex-wrap:wrap;gap:8px}
+
+/* ── MOBILE NAV ── */
+.mob-nav{position:fixed;bottom:0;left:0;right:0;z-index:400;background:rgba(253,250,246,.97);backdrop-filter:blur(14px);border-top:1px solid var(--border);display:none;padding:8px 0 env(safe-area-inset-bottom,12px)}
+.mob-nav-row{display:flex;justify-content:space-around}
+.mn-btn{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--gray);cursor:pointer;padding:5px 12px;border-radius:9px;border:none;background:none;font-family:inherit;transition:color .2s}
+.mn-btn.active{color:var(--bord)}
+.mn-ico{font-size:21px}
+.mob-menu{position:fixed;inset:0;background:var(--cream);z-index:550;display:none;flex-direction:column;padding:72px 22px 22px;gap:4px}
+.mob-menu.open{display:flex}
+.mob-menu-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:9px;background:var(--beige);border:none;font-size:19px;cursor:pointer}
+.mob-menu a{padding:14px 4px;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--border);display:block;cursor:pointer;transition:color .2s}
+.mob-menu a:hover{color:var(--bord)}
+
+/* ── LOADER ── */
+.loader-overlay{position:fixed;inset:0;background:var(--cream);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;transition:opacity .4s}
+.loader-overlay.hide{opacity:0;pointer-events:none}
+.loader-logo{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:700;color:var(--ink)}
+.loader-logo span{color:var(--bord)}
+.loader-bar{width:200px;height:3px;background:var(--beige2);border-radius:2px;overflow:hidden}
+.loader-progress{height:100%;background:var(--bord);border-radius:2px;animation:loadBar 1.2s ease forwards}
+
+/* ── ANIMS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeLeft{from{opacity:0;transform:translateX(44px)}to{opacity:1;transform:translateX(0)}}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes orbF{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-26px) scale(1.04)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes loadBar{from{width:0}to{width:100%}}
+
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .6s ease,transform .6s ease}
+.reveal.vis{opacity:1;transform:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .hero-inner{grid-template-columns:1fr;gap:32px}
+  .hero-visual{order:-1}
+  .hv-img{height:220px}
+  .fw2{display:none}
+  .cards-grid{grid-template-columns:repeat(2,1fr)}
+  .feats-grid{grid-template-columns:repeat(2,1fr)}
+  .testi-grid{grid-template-columns:repeat(2,1fr)}
+  .detail-grid{grid-template-columns:1fr}
+  .detail-imgs{height:260px}
+  .chat-layout{grid-template-columns:1fr;height:auto}
+  .chat-list{height:200px;border-right:none;border-bottom:1px solid var(--border)}
+  .chat-main{height:450px}
+  .stats-inner{grid-template-columns:repeat(2,1fr)}
+  .foot-inner{grid-template-columns:1fr 1fr;gap:24px}
+  .search-grid{grid-template-columns:1fr 1fr}
+  .search-grid .sf-btn{grid-column:1/-1}
+  .nav-links,.nav-right{display:none}
+  .hamburger{display:flex}
+  .mob-nav{display:block}
+  body{padding-bottom:68px}
+}
+@media(max-width:560px){
+  .cards-grid{grid-template-columns:1fr}
+  .feats-grid{grid-template-columns:1fr}
+  .testi-grid{grid-template-columns:1fr}
+  .stats-inner{grid-template-columns:1fr}
+  .search-grid{grid-template-columns:1fr}
+  .foot-inner{grid-template-columns:1fr}
+  .hero-btns{flex-direction:column}
+  .btn-main,.btn-sec{width:100%;justify-content:center}
+  .cta-btns{flex-direction:column}
+  .btn-cta-w,.btn-cta-o{width:100%}
+  .form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div class="loader-overlay" id="loader">
+  <div class="loader-logo">Room<span>Mate</span></div>
+  <div class="loader-bar"><div class="loader-progress"></div></div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-inner">
+    <div class="logo" onclick="goPage('home')">
+      <div class="logo-mark">🏠</div>
+      <span class="logo-text">Room<span>Mate</span></span>
+    </div>
+    <ul class="nav-links">
+      <li><a onclick="goPage('listings')">Объявления</a></li>
+      <li><a onclick="goPage('home');setTimeout(()=>document.getElementById('features').scrollIntoView({behavior:'smooth'}),100)">О нас</a></li>
+      <li><a id="navChatLink" onclick="requireAuth('chat')" class="hidden">Чат</a></li>
+    </ul>
+    <div class="nav-right" id="navRight">
+      <button class="btn-ghost" onclick="openModal('auth')">Войти</button>
+      <button class="btn-bord" onclick="openModal('auth','reg')">Разместить +</button>
+    </div>
+    <div class="nav-user hidden" id="navUser">
+      <div class="nav-avatar" id="navAvatarBtn" onclick="goPage('profile')" style="cursor:pointer">👤</div>
+      <button class="btn-ghost" onclick="logout()">Выйти</button>
+    </div>
+    <button class="hamburger" onclick="toggleMob()"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- MOB MENU -->
+<div class="mob-menu" id="mobMenu">
+  <button class="mob-menu-close" onclick="toggleMob()">✕</button>
+  <a onclick="goPage('listings');toggleMob()">🔍 Объявления</a>
+  <a onclick="requireAuth('chat');toggleMob()" id="mobChatLink" class="hidden">💬 Чат</a>
+  <a onclick="requireAuth('profile');toggleMob()" id="mobProfileLink" class="hidden">👤 Профиль</a>
+  <a onclick="openModal('auth');toggleMob()" id="mobLoginLink">🔑 Войти</a>
+  <a onclick="openModal('auth','reg');toggleMob()" id="mobRegLink">➕ Разместить</a>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     HOME PAGE
+═══════════════════════════════════════════ -->
+<div id="page-home" class="page active">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="orb orb1"></div><div class="orb orb2"></div>
+    <div class="hero-inner">
+      <div>
+        <div class="hero-kicker"><span class="kicker-dot"></span><span class="kicker-text">Доступно в 9 странах СНГ</span></div>
+        <h1 class="hero-h1">Найди жильё<br>в любом городе<br><em>СНГ</em></h1>
+        <p class="hero-sub">От Алматы до Минска — находи проверенных соседей и доступное жильё рядом с учёбой или работой. Бесплатно и безопасно.</p>
+        <div class="hero-btns">
+          <button class="btn-main" onclick="goPage('listings')">🔍 Найти жильё</button>
+          <button class="btn-sec" onclick="openModal('auth','reg')">Разместить объявление →</button>
+        </div>
+        <div class="hero-trust">
+          <div class="trust-avs">
+            <img src="https://i.pravatar.cc/60?img=3" alt=""/><img src="https://i.pravatar.cc/60?img=7" alt=""/><img src="https://i.pravatar.cc/60?img=11" alt=""/><img src="https://i.pravatar.cc/60?img=22" alt=""/>
+          </div>
+          <span class="trust-txt">Доверяют <strong>85 000+</strong> человек по СНГ</span>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hv-card">
+          <div class="hv-img"><img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=700&q=75" alt="Квартира" loading="eager"/></div>
+          <div class="hv-body">
+            <div class="hv-top">
+              <div class="hv-title">Уютная комната · Алматы, Бостандык</div>
+              <div class="hv-price">65 000 ₸<em>/мес</em></div>
+            </div>
+            <div class="hv-tags"><span class="hv-tag">✅ Проверено</span><span class="hv-tag">📶 WiFi</span><span class="hv-tag">👥 2 соседа</span><span class="hv-tag">⭐ 4.9</span></div>
+          </div>
+        </div>
+        <div class="fw fw1"><span class="fw-ico">🏙</span><div><div class="fw-val">80+ городов</div><div class="fw-lbl">по всему СНГ</div><span class="fw-badge">Онлайн</span></div></div>
+        <div class="fw fw2"><span class="fw-ico">🤝</span><div><div class="fw-val">97% совпадений</div><div class="fw-lbl">соседей</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEARCH BAR -->
+  <section class="search-bar-section">
+    <div class="search-bar-inner">
+      <div class="search-box reveal">
+        <div class="search-grid">
+          <div><span class="sf-lbl">Город или страна</span><input class="sf-in" id="homeSearch" type="text" placeholder="🔍 Алматы, Москва, Ташкент..."/></div>
+          <div><span class="sf-lbl">Тип жилья</span>
+            <select class="sf-sel" id="homeType">
+              <option value="">Любой тип</option>
+              <option value="room">Комната</option>
+              <option value="apt">Квартира</option>
+              <option value="studio">Студия</option>
+            </select>
+          </div>
+          <div><span class="sf-lbl">Бюджет</span>
+            <select class="sf-sel" id="homeBudget">
+              <option value="">Любой</option>
+              <option value="low">до 50 000 ₸</option>
+              <option value="mid">50–120 000 ₸</option>
+              <option value="high">от 120 000 ₸</option>
+            </select>
+          </div>
+          <button class="sf-btn" onclick="doHomeSearch()">Найти →</button>
+        </div>
+        <div class="search-tags">
+          <span class="s-tag active" onclick="quickCity(this,'')">🔥 Все</span>
+          <span class="s-tag" onclick="quickCity(this,'Алматы')">🇰🇿 Алматы</span>
+          <span class="s-tag" onclick="quickCity(this,'Астана')">🇰🇿 Астана</span>
+          <span class="s-tag" onclick="quickCity(this,'Москва')">🇷🇺 Москва</span>
+          <span class="s-tag" onclick="quickCity(this,'Ташкент')">🇺🇿 Ташкент</span>
+          <span class="s-tag" onclick="quickCity(this,'Бишкек')">🇰🇬 Бишкек</span>
+          <span class="s-tag" onclick="quickCity(this,'Минск')">🇧🇾 Минск</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats-section reveal">
+    <div class="stats-inner">
+      <div class="stat-block"><span class="stat-flag">🏠</span><div class="stat-num"><span class="cnt" data-t="320">0</span><span class="plus">K+</span></div><div class="stat-lbl">Активных объявлений по СНГ</div></div>
+      <div class="stat-block"><span class="stat-flag">🌍</span><div class="stat-num"><span class="cnt" data-t="9">0</span><span class="plus"> стран</span></div><div class="stat-lbl">КЗ, РФ, УЗ, КГ и другие</div></div>
+      <div class="stat-block"><span class="stat-flag">👤</span><div class="stat-num"><span class="cnt" data-t="85">0</span><span class="plus">K+</span></div><div class="stat-lbl">Пользователей нашли жильё</div></div>
+      <div class="stat-block"><span class="stat-flag">⭐</span><div class="stat-num">4.<span class="cnt" data-t="8">8</span></div><div class="stat-lbl">Средний рейтинг</div></div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="feats-section" id="features">
+    <div class="feats-inner">
+      <div class="reveal"><div class="s-eyebrow">Почему мы</div><h2 class="s-title">Всё для <em>комфортного</em><br>поиска жилья</h2></div>
+      <div class="feats-grid" id="featsGrid"></div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testi-section">
+    <div class="testi-inner">
+      <div class="reveal"><div class="s-eyebrow" style="color:var(--gold)">Отзывы</div><h2 class="s-title" style="color:#fff">Нам доверяют люди<br><em style="color:rgba(255,255,255,.5)">по всему СНГ</em></h2></div>
+      <div class="testi-grid" id="testiGrid"></div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="cta-card reveal">
+      <h2>Готов найти жильё мечты?</h2>
+      <p>Присоединяйся к 85 000+ людей, которые уже нашли дом через RoomMate</p>
+      <div class="cta-btns">
+        <button class="btn-cta-w" onclick="openModal('auth','reg')">Зарегистрироваться бесплатно</button>
+        <button class="btn-cta-o" onclick="goPage('listings')">Смотреть объявления</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="foot-inner">
+      <div>
+        <div class="f-logo" onclick="goPage('home')">
+          <div class="f-logo-mark">🏠</div>
+          <span class="f-logo-text">Room<span>Mate</span></span>
+        </div>
+        <p class="f-desc">Платформа для поиска жилья и соседей по всему СНГ — Казахстан, Россия, Узбекистан, Кыргызстан, Беларусь и другие страны.</p>
+        <div class="f-soc"><button class="f-sb">📘</button><button class="f-sb">📸</button><button class="f-sb">✈️</button></div>
+      </div>
+      <div class="f-col"><h4>Платформа</h4><ul>
+        <li><a onclick="goPage('listings')">Объявления</a></li>
+        <li><a onclick="openModal('auth','reg')">Разместить</a></li>
+        <li><a onclick="requireAuth('profile')">Личный кабинет</a></li>
+      </ul></div>
+      <div class="f-col"><h4>Страны</h4><ul>
+        <li><a>🇰🇿 Казахстан</a></li><li><a>🇷🇺 Россия</a></li>
+        <li><a>🇺🇿 Узбекистан</a></li><li><a>🇰🇬 Кыргызстан</a></li><li><a>🇧🇾 Беларусь</a></li>
+      </ul></div>
+      <div class="f-col"><h4>Поддержка</h4><ul>
+        <li><a>Помощь</a></li><li><a>Безопасность</a></li><li><a>Контакты</a></li>
+      </ul></div>
+    </div>
+    <div class="foot-bot"><span>© 2025 RoomMate. Все права защищены.</span><span>КЗ · РФ · УЗ · КГ · БЛ · УА · АЗ · ГЕ · АМ</span></div>
+  </footer>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     LISTINGS PAGE
+═══════════════════════════════════════════ -->
+<div id="page-listings" class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Актуальные <em>объявления</em></h1>
+      <p class="page-sub" id="listingsCount">Загрузка...</p>
+    </div>
+    <div class="pills">
+      <span class="pill active" onclick="pillFilter(this,'all')">Все</span>
+      <span class="pill" onclick="pillFilter(this,'room')">🛏 Комнаты</span>
+      <span class="pill" onclick="pillFilter(this,'apt')">🏠 Квартиры</span>
+      <span class="pill" onclick="pillFilter(this,'studio')">🏢 Студии</span>
+    </div>
+  </div>
+  <!-- INLINE SEARCH -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px 20px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <input class="sf-in" id="listingsSearch" style="max-width:280px" type="text" placeholder="🔍 Поиск по городу..."/>
+      <select class="sf-sel" id="listingsCountry" style="max-width:200px">
+        <option value="">Все страны</option>
+        <option value="🇰🇿">🇰🇿 Казахстан</option>
+        <option value="🇷🇺">🇷🇺 Россия</option>
+        <option value="🇺🇿">🇺🇿 Узбекистан</option>
+        <option value="🇰🇬">🇰🇬 Кыргызстан</option>
+        <option value="🇧🇾">🇧🇾 Беларусь</option>
+      </select>
+      <button class="sf-btn" style="padding:11px 20px" onclick="filterListings()">Применить</button>
+      <button class="btn-ghost" style="padding:11px 16px" onclick="resetFilters()">Сбросить</button>
+    </div>
+  </div>
+  <div class="listings-wrap">
+    <div class="cards-grid" id="cardsGrid"></div>
+    <div id="noResults" class="hidden" style="text-align:center;padding:60px 0;color:var(--gray)">
+      <div style="font-size:48px;margin-bottom:12px">🏠</div>
+      <div style="font-size:18px;font-weight:700;color:var(--ink);margin-bottom:8px">Ничего не найдено</div>
+      <div>Попробуй изменить фильтры</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     DETAIL PAGE
+═══════════════════════════════════════════ -->
+<div id="page-detail" class="page">
+  <div class="detail-wrap">
+    <button class="detail-back" onclick="goPage('listings')">← Назад к объявлениям</button>
+    <div class="detail-grid" id="detailContent"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PROFILE PAGE
+═══════════════════════════════════════════ -->
+<div id="page-profile" class="page">
+  <div class="profile-wrap">
+    <div class="profile-header">
+      <div class="profile-avatar" id="profileAvatar">👤</div>
+      <div>
+        <div class="profile-name" id="profileName">—</div>
+        <div class="profile-email" id="profileEmail">—</div>
+        <div class="profile-badge">✅ Аккаунт активен</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-bord" onclick="openModal('addListing')">+ Разместить объявление</button>
+        <button class="btn-ghost" onclick="logout()">Выйти</button>
+      </div>
+    </div>
+    <div class="profile-tabs">
+      <button class="p-tab active" onclick="switchPTab(this,'fav')">❤️ Избранное</button>
+      <button class="p-tab" onclick="switchPTab(this,'mylistings')">🏠 Мои объявления</button>
+      <button class="p-tab" onclick="switchPTab(this,'settings')">⚙️ Настройки</button>
+    </div>
+    <!-- FAV -->
+    <div class="p-section active" id="p-fav">
+      <div class="cards-grid" id="favGrid"></div>
+      <div id="favEmpty" class="empty-state hidden"><div class="empty-icon">❤️</div><div class="empty-title">Пока нет избранных</div><div class="empty-sub">Нажимай 🤍 на объявлениях,<br>чтобы сохранять понравившиеся</div></div>
+    </div>
+    <!-- MY LISTINGS -->
+    <div class="p-section" id="p-mylistings">
+      <div class="cards-grid" id="myListingsGrid"></div>
+      <div id="myListingsEmpty" class="empty-state hidden"><div class="empty-icon">🏠</div><div class="empty-title">У тебя пока нет объявлений</div><div class="empty-sub">Разместить объявление можно<br>нажав кнопку выше</div><br><button class="btn-bord" style="margin-top:12px" onclick="openModal('addListing')">+ Разместить</button></div>
+    </div>
+    <!-- SETTINGS -->
+    <div class="p-section" id="p-settings">
+      <div style="background:#fff;border-radius:18px;border:1px solid var(--border);padding:28px;max-width:520px">
+        <div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:20px">Личные данные</div>
+        <div class="mf"><label>Имя</label><input type="text" id="settingsName" placeholder="Ваше имя"/></div>
+        <div class="mf"><label>Email</label><input type="email" id="settingsEmail" readonly style="opacity:.6"/></div>
+        <div class="mf"><label>Телефон</label><input type="tel" id="settingsPhone" placeholder="+7 700 000 0000"/></div>
+        <div class="mf"><label>Страна</label>
+          <select id="settingsCountry">
+            <option>🇰🇿 Казахстан</option><option>🇷🇺 Россия</option><option>🇺🇿 Узбекистан</option><option>🇰🇬 Кыргызстан</option><option>🇧🇾 Беларусь</option>
+          </select>
+        </div>
+        <button class="btn-sub" style="width:auto;padding:11px 28px" onclick="saveSettings()">Сохранить изменения</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CHAT PAGE
+═══════════════════════════════════════════ -->
+<div id="page-chat" class="page">
+  <div class="chat-wrap">
+    <h1 class="page-title" style="margin-bottom:20px">Сообщения</h1>
+    <div class="chat-layout">
+      <div class="chat-list">
+        <div class="chat-list-header"><div class="chat-list-title">Чаты</div></div>
+        <div id="chatList"></div>
+      </div>
+      <div class="chat-main" id="chatMain">
+        <div class="chat-empty"><div style="font-size:40px">💬</div><div style="font-weight:700;color:var(--ink)">Выбери чат</div><div style="font-size:13px">чтобы начать общение</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════ -->
+
+<!-- AUTH MODAL -->
+<div class="overlay" id="modal-auth" onclick="maybeClose(event,'auth')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('auth')">✕</button>
+    <h2 id="authTitle">Добро пожаловать</h2>
+    <p class="modal-sub" id="authSub">Войдите в свой аккаунт</p>
+    <div class="tab-row">
+      <button class="m-tab active" id="authTab1" onclick="switchAuthTab('login')">Войти</button>
+      <button class="m-tab" id="authTab2" onclick="switchAuthTab('reg')">Регистрация</button>
+    </div>
+    <!-- LOGIN -->
+    <div id="authLoginForm">
+      <div class="mf"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com"/></div>
+      <div class="mf"><label>Пароль</label><input type="password" id="loginPass" placeholder="••••••••"/></div>
+      <div class="err-msg" id="loginErr">Неверный email или пароль</div>
+      <button class="btn-sub" id="loginBtn" onclick="doLogin()">Войти</button>
+      <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--gray)">
+        Нет аккаунта? <a style="color:var(--bord);cursor:pointer;font-weight:700" onclick="switchAuthTab('reg')">Зарегистрироваться</a>
+      </div>
+    </div>
+    <!-- REGISTER -->
+    <div id="authRegForm" class="hidden">
+      <div class="form-row">
+        <div class="mf"><label>Имя</label><input type="text" id="regName" placeholder="Ваше имя"/></div>
+        <div class="mf"><label>Телефон</label><input type="tel" id="regPhone" placeholder="+7 700 000 0000"/></div>
+      </div>
+      <div class="mf"><label>Email</label><input type="email" id="regEmail" placeholder="you@example.com"/></div>
+      <div class="mf"><label>Страна</label>
+        <select id="regCountry">
+          <option>🇰🇿 Казахстан</option><option>🇷🇺 Россия</option><option>🇺🇿 Узбекистан</option><option>🇰🇬 Кыргызстан</option><option>🇧🇾 Беларусь</option><option>🇺🇦 Украина</option><option>🇦🇿 Азербайджан</option><option>🇬🇪 Грузия</option><option>🇦🇲 Армения</option>
+        </select>
+      </div>
+      <div class="mf"><label>Пароль</label><input type="password" id="regPass" placeholder="Минимум 8 символов"/></div>
+      <div class="err-msg" id="regErr">Заполни все поля</div>
+      <button class="btn-sub" id="regBtn" onclick="doRegister()">Создать аккаунт</button>
+      <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--gray)">
+        Уже есть аккаунт? <a style="color:var(--bord);cursor:pointer;font-weight:700" onclick="switchAuthTab('login')">Войти</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD LISTING MODAL -->
+<div class="overlay" id="modal-addListing" onclick="maybeClose(event,'addListing')">
+  <div class="modal" style="max-width:600px">
+    <button class="modal-close" onclick="closeModal('addListing')">✕</button>
+    <h2>Разместить <em style="color:var(--bord);font-style:italic">объявление</em></h2>
+    <p class="modal-sub">Заполни форму — объявление появится сразу после публикации</p>
+    <div class="mf"><label>Заголовок</label><input type="text" id="addTitle" placeholder="Уютная комната рядом с метро..."/></div>
+    <div class="form-row">
+      <div class="mf"><label>Город</label><input type="text" id="addCity" placeholder="Алматы"/></div>
+      <div class="mf"><label>Страна</label>
+        <select id="addCountry">
+          <option value="🇰🇿">🇰🇿 Казахстан</option><option value="🇷🇺">🇷🇺 Россия</option><option value="🇺🇿">🇺🇿 Узбекистан</option><option value="🇰🇬">🇰🇬 Кыргызстан</option><option value="🇧🇾">🇧🇾 Беларусь</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="mf"><label>Тип жилья</label>
+        <select id="addType">
+          <option value="room">🛏 Комната</option><option value="apt">🏠 Квартира</option><option value="studio">🏢 Студия</option>
+        </select>
+      </div>
+      <div class="mf"><label>Цена (₸/мес)</label><input type="number" id="addPrice" placeholder="65000"/></div>
+    </div>
+    <div class="form-row">
+      <div class="mf"><label>Количество соседей</label>
+        <select id="addRoommates"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4+</option></select>
+      </div>
+      <div class="mf"><label>Район</label><input type="text" id="addDistrict" placeholder="Бостандыкский"/></div>
+    </div>
+    <div class="mf"><label>Описание</label><textarea id="addDesc" placeholder="Опиши жильё подробнее — удобства, соседей, условия..."></textarea></div>
+    <div class="mf"><label>Ссылка на фото (URL)</label><input type="url" id="addImg" placeholder="https://images.unsplash.com/..."/></div>
+    <div class="err-msg" id="addErr">Заполни все обязательные поля</div>
+    <button class="btn-sub" onclick="doAddListing()">Опубликовать объявление 🚀</button>
+  </div>
+</div>
+
+<!-- CONTACT MODAL -->
+<div class="overlay" id="modal-contact" onclick="maybeClose(event,'contact')">
+  <div class="modal" style="max-width:420px">
+    <button class="modal-close" onclick="closeModal('contact')">✕</button>
+    <h2>Написать <em style="color:var(--bord);font-style:italic">владельцу</em></h2>
+    <p class="modal-sub" id="contactSub">Отправь сообщение арендодателю</p>
+    <div class="mf"><label>Сообщение</label><textarea id="contactMsg" placeholder="Здравствуйте! Меня интересует ваше объявление..." style="min-height:110px"></textarea></div>
+    <div class="mf"><label>Ваш телефон (необязательно)</label><input type="tel" id="contactPhone" placeholder="+7 700 000 0000"/></div>
+    <button class="btn-sub" onclick="sendContact()">Отправить сообщение 📨</button>
+  </div>
+</div>
+
+<!-- MOBILE NAV -->
+<nav class="mob-nav">
+  <div class="mob-nav-row">
+    <button class="mn-btn active" id="mn0" onclick="goPage('home')"><span class="mn-ico">🏠</span>Главная</button>
+    <button class="mn-btn" id="mn1" onclick="goPage('listings')"><span class="mn-ico">🔍</span>Поиск</button>
+    <button class="mn-btn" id="mn2" onclick="requireAuth('chat')"><span class="mn-ico">💬</span>Чат</button>
+    <button class="mn-btn" id="mn3" onclick="requireAuth('profile')"><span class="mn-ico">👤</span>Профиль</button>
+  </div>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toastEl"><span id="toastMsg"></span></div>
+
+<script>
+/* ═══════════════════════════════════════
+   SUPABASE INIT
+   Замените URL и KEY на свои из Supabase Dashboard
+   Settings → API → Project URL & anon key
+═══════════════════════════════════════ */
+const SUPABASE_URL = 'https://usrceqowfozluottyiei.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_0JAyHFl2OmyViZiwca7lBA_l38ji6AD';
+
+// Простой Supabase-клиент без npm
+const supa = {
+  async req(path, opts={}) {
+    try {
+      const r = await fetch(SUPABASE_URL + path, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + (currentUser?.token || SUPABASE_KEY),
+          'Content-Type': 'application/json',
+          'Prefer': opts.prefer || '',
+          ...opts.headers
+        },
+        ...opts
+      });
+      if (!r.ok) { const e = await r.json(); throw e; }
+      if (r.status === 204) return {};
+      return r.json();
+    } catch(e) { console.warn('Supabase:', e); throw e; }
+  },
+  // Auth
+  async signUp(email, password, meta={}) {
+    return this.req('/auth/v1/signup', {method:'POST', body: JSON.stringify({email,password,data:meta})});
+  },
+  async signIn(email, password) {
+    return this.req('/auth/v1/token?grant_type=password', {method:'POST', body: JSON.stringify({email,password})});
+  },
+  async signOut(token) {
+    return this.req('/auth/v1/logout', {method:'POST', headers:{'Authorization':'Bearer '+token}});
+  },
+  // DB
+  async select(table, query='') {
+    return this.req(`/rest/v1/${table}?${query}&order=created_at.desc`);
+  },
+  async insert(table, data) {
+    return this.req(`/rest/v1/${table}`, {method:'POST', prefer:'return=representation', body: JSON.stringify(data)});
+  },
+  async update(table, id, data) {
+    return this.req(`/rest/v1/${table}?id=eq.${id}`, {method:'PATCH', prefer:'return=representation', body: JSON.stringify(data)});
+  },
+  async delete(table, id) {
+    return this.req(`/rest/v1/${table}?id=eq.${id}`, {method:'DELETE'});
+  }
+};
+
+/* ═══════════════════════════════════════
+   MOCK DATA (fallback, пока нет Supabase)
+═══════════════════════════════════════ */
+const MOCK_LISTINGS = [
+  {id:1,type:'room',city:'Алматы',flag:'🇰🇿',title:'Уютная комната в 3-к квартире, Бостандык',price:65000,currency:'₸',roommates:2,rating:4.9,verified:true,hot:true,district:'Бостандыкский',desc:'Просторная светлая комната в хорошей квартире. Рядом парк, магазины. Соседи — студенты КазНУ, тихие и аккуратные. Интернет 100 Мбит/с, стиральная машина, холодильник.',amenities:['WiFi','Стиральная машина','Холодильник','Балкон'],img:'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=700&q=70',owner:{name:'Айгерим С.',avatar:'👩',phone:'+7 701 234 5678',rating:4.9,since:'2023'}},
+  {id:2,type:'apt',city:'Москва',flag:'🇷🇺',title:'1-комн. квартира, 5 мин. от метро Сокол',price:45000,currency:'₽',roommates:1,rating:4.8,verified:true,district:'Сокол',desc:'Уютная однокомнатная квартира рядом с метро. Полностью меблирована, свежий ремонт. Идеально для одного человека или пары.',amenities:['WiFi','Парковка','Лифт','Балкон'],img:'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=700&q=70',owner:{name:'Михаил Р.',avatar:'👨',phone:'+7 916 123 4567',rating:4.8,since:'2022'}},
+  {id:3,type:'studio',city:'Ташкент',flag:'🇺🇿',title:'Современная студия, Юнусабад',price:3200000,currency:'сум',roommates:1,rating:4.7,verified:true,newL:true,district:'Юнусабад',desc:'Новая студия в современном ЖК. Отличный вид из окна. Вся необходимая мебель и техника. Охрана, видеонаблюдение.',amenities:['WiFi','Охрана','Спортзал','Консьерж'],img:'https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=700&q=70',owner:{name:'Шохрух Н.',avatar:'🧑',phone:'+998 90 123 45 67',rating:4.7,since:'2024'}},
+  {id:4,type:'room',city:'Санкт-Петербург',flag:'🇷🇺',title:'Комната в 4-к, центр, рядом с Невским',price:28000,currency:'₽',roommates:3,rating:4.6,verified:false,district:'Центральный',desc:'Большая светлая комната в коммунальной квартире в историческом центре. 3 соседа — молодые специалисты. Все удобства.',amenities:['WiFi','Кухня','Ванная','Центр'],img:'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=700&q=70',owner:{name:'Дарья В.',avatar:'👩',phone:'+7 812 123 4567',rating:4.6,since:'2023'}},
+  {id:5,type:'apt',city:'Астана',flag:'🇰🇿',title:'Двушка для сотрудников, ЖК Отырар',price:110000,currency:'₸',roommates:2,rating:4.9,verified:true,district:'Есиль',desc:'Просторная двухкомнатная квартира в новом ЖК. Закрытая территория, паркинг. Ищем двух аккуратных соседей.',amenities:['WiFi','Паркинг','Охрана','Лифт'],img:'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=700&q=70',owner:{name:'Нурлан А.',avatar:'👨',phone:'+7 717 234 5678',rating:4.9,since:'2022'}},
+  {id:6,type:'room',city:'Бишкек',flag:'🇰🇬',title:'Комната у КНУ им. Баласагына',price:7500,currency:'сом',roommates:2,rating:4.7,verified:true,district:'Октябрьский',desc:'Тихая комната для студента рядом с КНУ. 2 соседа-студента. Есть всё необходимое для учёбы и жизни.',amenities:['WiFi','Кухня','Стиральная машина'],img:'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=700&q=70',owner:{name:'Айбек М.',avatar:'🧑',phone:'+996 700 123 456',rating:4.7,since:'2024'}},
+  {id:7,type:'apt',city:'Минск',flag:'🇧🇾',title:'2-к квартира, центр Минска',price:500,currency:'Br',roommates:2,rating:4.8,verified:true,district:'Центральный',desc:'Просторная двухкомнатная квартира в центре. Хорошие соседи, чистота. Рядом метро и все удобства.',amenities:['WiFi','Метро','Балкон','Стиралка'],img:'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=700&q=70',owner:{name:'Анна К.',avatar:'👩',phone:'+375 29 123 4567',rating:4.8,since:'2023'}},
+  {id:8,type:'studio',city:'Алматы',flag:'🇰🇿',title:'Студия с видом на горы, Медеу',price:90000,currency:'₸',roommates:1,rating:4.9,verified:true,hot:true,district:'Медеуский',desc:'Шикарная студия с панорамным видом на горы. Современный дизайн. Для одного человека — идеальный вариант.',amenities:['WiFi','Вид на горы','Паркинг','Безопасность'],img:'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=700&q=70',owner:{name:'Зарина Т.',avatar:'👩',phone:'+7 777 987 6543',rating:4.9,since:'2023'}},
+];
+
+const MOCK_CHATS = [
+  {id:1,with:'Айгерим С.',avatar:'👩',preview:'Здравствуйте! Ещё актуально?',time:'10:24',unread:2,msgs:[
+    {from:'them',text:'Здравствуйте! Ещё актуально?',time:'10:20'},
+    {from:'them',text:'Когда можно посмотреть квартиру?',time:'10:24'},
+  ]},
+  {id:2,with:'Михаил Р.',avatar:'👨',preview:'Да, приходите в субботу',time:'вчера',unread:0,msgs:[
+    {from:'me',text:'Добрый день! Интересует ваша квартира',time:'вчера 14:00'},
+    {from:'them',text:'Да, приходите в субботу',time:'вчера 15:30'},
+  ]},
+];
+
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let currentUser = JSON.parse(localStorage.getItem('rm_user') || 'null');
+let favorites   = JSON.parse(localStorage.getItem('rm_favs') || '[]');
+let userListings= JSON.parse(localStorage.getItem('rm_mylistings') || '[]');
+let chatMessages= JSON.parse(localStorage.getItem('rm_chats') || 'null') || MOCK_CHATS;
+let currentChat = null;
+let allListings = [...MOCK_LISTINGS, ...userListings];
+let filteredListings = [...allListings];
+let activeFilter= 'all';
+let currentListing = null;
+let pendingPage = null;
+
+/* ═══════════════════════════════════════
+   SUPABASE SQL TO CREATE TABLES
+   (выполни в Supabase SQL Editor)
+
+   CREATE TABLE listings (
+     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     user_id UUID REFERENCES auth.users(id),
+     title TEXT NOT NULL,
+     city TEXT NOT NULL,
+     flag TEXT DEFAULT '🇰🇿',
+     district TEXT,
+     type TEXT NOT NULL,
+     price INTEGER NOT NULL,
+     currency TEXT DEFAULT '₸',
+     roommates INTEGER DEFAULT 1,
+     rating NUMERIC DEFAULT 4.5,
+     verified BOOLEAN DEFAULT FALSE,
+     description TEXT,
+     img TEXT,
+     amenities TEXT[],
+     owner_name TEXT,
+     owner_phone TEXT,
+     created_at TIMESTAMPTZ DEFAULT NOW()
+   );
+
+   CREATE TABLE favorites (
+     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     user_id UUID REFERENCES auth.users(id),
+     listing_id INTEGER NOT NULL,
+     created_at TIMESTAMPTZ DEFAULT NOW(),
+     UNIQUE(user_id, listing_id)
+   );
+
+   CREATE TABLE messages (
+     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     from_user UUID REFERENCES auth.users(id),
+     to_user UUID REFERENCES auth.users(id),
+     listing_id INTEGER,
+     text TEXT NOT NULL,
+     created_at TIMESTAMPTZ DEFAULT NOW()
+   );
+
+   -- Enable RLS
+   ALTER TABLE listings ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE favorites ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE messages  ENABLE ROW LEVEL SECURITY;
+
+   -- Public read listings
+   CREATE POLICY "listings_read" ON listings FOR SELECT USING (true);
+   CREATE POLICY "listings_insert" ON listings FOR INSERT WITH CHECK (auth.uid() = user_id);
+   CREATE POLICY "listings_update" ON listings FOR UPDATE USING (auth.uid() = user_id);
+
+   -- User favorites
+   CREATE POLICY "favs_all" ON favorites USING (auth.uid() = user_id);
+   CREATE POLICY "msgs_all"  ON messages  USING (auth.uid() = from_user OR auth.uid() = to_user);
+═══════════════════════════════════════ */
+
+/* ═══════════════════════════════════════
+   ROUTER
+═══════════════════════════════════════ */
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  // mob nav active
+  const pageMap = {home:0,listings:1,chat:2,profile:3};
+  document.querySelectorAll('.mn-btn').forEach((b,i) => b.classList.toggle('active', i===pageMap[name]));
+  // page specific init
+  if (name==='listings') renderListings(filteredListings);
+  if (name==='profile')  renderProfile();
+  if (name==='chat')     renderChatList();
+}
+
+function requireAuth(page) {
+  if (!currentUser) { pendingPage=page; openModal('auth'); return; }
+  goPage(page);
+}
+
+/* ═══════════════════════════════════════
+   AUTH
+═══════════════════════════════════════ */
+function openModal(name, tab) {
+  document.getElementById('modal-'+name).classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (name==='auth' && tab) switchAuthTab(tab);
+}
+function closeModal(name) {
+  document.getElementById('modal-'+name).classList.remove('open');
+  document.body.style.overflow = '';
+}
+function maybeClose(e, name) {
+  if (e.target === document.getElementById('modal-'+name)) closeModal(name);
+}
+
+function switchAuthTab(tab) {
+  const isLogin = tab==='login';
+  document.getElementById('authTab1').classList.toggle('active', isLogin);
+  document.getElementById('authTab2').classList.toggle('active', !isLogin);
+  document.getElementById('authLoginForm').classList.toggle('hidden', !isLogin);
+  document.getElementById('authRegForm').classList.toggle('hidden', isLogin);
+  document.getElementById('authTitle').textContent = isLogin ? 'Добро пожаловать' : 'Создать аккаунт';
+  document.getElementById('authSub').textContent = isLogin ? 'Войдите в свой аккаунт' : 'Регистрация займёт 1 минуту';
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  if (!email || !pass) { showErr('loginErr','Заполни все поля'); return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Входим...';
+  hideErr('loginErr');
+  try {
+    // Try Supabase
+    const data = await supa.signIn(email, pass);
+    loginSuccess({email, name: data.user?.user_metadata?.name || email.split('@')[0], token: data.access_token, id: data.user?.id});
+  } catch(e) {
+    // Fallback: local mock auth
+    const stored = JSON.parse(localStorage.getItem('rm_users')||'[]');
+    const found = stored.find(u => u.email===email && u.pass===pass);
+    if (found) { loginSuccess(found); }
+    else { showErr('loginErr','Неверный email или пароль'); }
+  }
+  btn.disabled = false; btn.textContent = 'Войти';
+}
+
+async function doRegister() {
+  const name    = document.getElementById('regName').value.trim();
+  const phone   = document.getElementById('regPhone').value.trim();
+  const email   = document.getElementById('regEmail').value.trim();
+  const pass    = document.getElementById('regPass').value;
+  const country = document.getElementById('regCountry').value;
+  if (!name || !email || !pass) { showErr('regErr','Заполни все поля'); return; }
+  if (pass.length < 8) { showErr('regErr','Пароль минимум 8 символов'); return; }
+  const btn = document.getElementById('regBtn');
+  btn.disabled = true; btn.textContent = 'Создаём...';
+  hideErr('regErr');
+  try {
+    const data = await supa.signUp(email, pass, {name, phone, country});
+    const user = {email, name, phone, country, token: data.access_token, id: data.user?.id};
+    // Also save locally
+    const stored = JSON.parse(localStorage.getItem('rm_users')||'[]');
+    stored.push({...user, pass});
+    localStorage.setItem('rm_users', JSON.stringify(stored));
+    loginSuccess(user);
+    toast('🎉 Аккаунт создан! Добро пожаловать, '+name+'!');
+  } catch(e) {
+    // Fallback local
+    const user = {email, name, phone, country, id:'local_'+Date.now()};
+    const stored = JSON.parse(localStorage.getItem('rm_users')||'[]');
+    if (stored.find(u=>u.email===email)) { showErr('regErr','Email уже используется'); btn.disabled=false; btn.textContent='Создать аккаунт'; return; }
+    stored.push({...user, pass});
+    localStorage.setItem('rm_users', JSON.stringify(stored));
+    loginSuccess(user);
+    toast('🎉 Аккаунт создан! Добро пожаловать, '+name+'!');
+  }
+  btn.disabled = false; btn.textContent = 'Создать аккаунт';
+}
+
+function loginSuccess(user) {
+  currentUser = user;
+  localStorage.setItem('rm_user', JSON.stringify(user));
+  closeModal('auth');
+  updateNavAuth();
+  toast('✅ Добро пожаловать, '+user.name+'!');
+  if (pendingPage) { goPage(pendingPage); pendingPage=null; }
+}
+
+function logout() {
+  if (currentUser?.token) supa.signOut(currentUser.token).catch(()=>{});
+  currentUser = null;
+  localStorage.removeItem('rm_user');
+  updateNavAuth();
+  goPage('home');
+  toast('👋 Вы вышли из аккаунта');
+}
+
+function updateNavAuth() {
+  const logged = !!currentUser;
+  document.getElementById('navRight').classList.toggle('hidden', logged);
+  document.getElementById('navUser').classList.toggle('hidden', !logged);
+  document.getElementById('navChatLink').classList.toggle('hidden', !logged);
+  document.getElementById('mobChatLink').classList.toggle('hidden', !logged);
+  document.getElementById('mobProfileLink').classList.toggle('hidden', !logged);
+  document.getElementById('mobLoginLink').classList.toggle('hidden', logged);
+  document.getElementById('mobRegLink').classList.toggle('hidden', logged);
+}
+
+/* ═══════════════════════════════════════
+   LISTINGS
+═══════════════════════════════════════ */
+function renderListings(data) {
+  allListings = [...MOCK_LISTINGS, ...userListings];
+  const grid = document.getElementById('cardsGrid');
+  document.getElementById('noResults').classList.toggle('hidden', data.length > 0);
+  document.getElementById('listingsCount').textContent = data.length + ' объявлений найдено';
+  if (!data.length) { grid.innerHTML=''; return; }
+  grid.innerHTML = data.map((l,i) => cardHTML(l,i)).join('');
+}
+
+function cardHTML(l, i=0) {
+  const isFav = favorites.includes(l.id);
+  const priceStr = l.price.toLocaleString('ru') + ' ' + l.currency;
+  return `<div class="lc" style="animation:fadeUp .4s ${i*.06}s ease both" onclick="openDetail(${l.id})">
+    <div class="lc-img">
+      <img src="${l.img}" alt="${l.title}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&q=60'"/>
+      <div class="lc-badges">
+        ${l.verified?'<span class="lc-badge b-v">✅ Проверено</span>':''}
+        ${l.hot?'<span class="lc-badge b-h">🔥 Хит</span>':''}
+        ${l.newL?'<span class="lc-badge b-n">✨ Новое</span>':''}
+        <span class="lc-badge b-t">${l.type==='room'?'🛏 Комната':l.type==='apt'?'🏠 Квартира':'🏢 Студия'}</span>
+      </div>
+      <button class="lc-heart" onclick="toggleFav(event,${l.id})">${isFav?'❤️':'🤍'}</button>
+    </div>
+    <div class="lc-body">
+      <div class="lc-loc">${l.flag} ${l.city}${l.district?' · '+l.district:''}</div>
+      <div class="lc-title">${l.title}</div>
+      <div class="lc-feats">
+        <span class="lc-feat">👥 ${l.roommates} ${l.roommates===1?'сосед':'соседа'}</span>
+        <span class="lc-feat">🛏 Своя комната</span>
+        <span class="lc-feat">📶 WiFi</span>
+      </div>
+      <div class="lc-foot">
+        <div class="lc-price">${priceStr}<em>/мес</em></div>
+        <div class="lc-rat">★ ${l.rating}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function pillFilter(el, type) {
+  document.querySelectorAll('.pills .pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  activeFilter = type;
+  filterListings();
+}
+
+function filterListings() {
+  allListings = [...MOCK_LISTINGS, ...userListings];
+  const search  = (document.getElementById('listingsSearch')?.value||'').toLowerCase();
+  const country = document.getElementById('listingsCountry')?.value||'';
+  filteredListings = allListings.filter(l => {
+    if (activeFilter!=='all' && l.type!==activeFilter) return false;
+    if (search && !l.city.toLowerCase().includes(search) && !l.title.toLowerCase().includes(search)) return false;
+    if (country && l.flag!==country) return false;
+    return true;
+  });
+  renderListings(filteredListings);
+}
+
+function resetFilters() {
+  document.getElementById('listingsSearch').value='';
+  document.getElementById('listingsCountry').value='';
+  document.querySelectorAll('.pills .pill').forEach((p,i)=>p.classList.toggle('active',i===0));
+  activeFilter='all';
+  filteredListings=[...allListings];
+  renderListings(filteredListings);
+}
+
+/* ═══════════════════════════════════════
+   DETAIL
+═══════════════════════════════════════ */
+function openDetail(id) {
+  allListings = [...MOCK_LISTINGS, ...userListings];
+  const l = allListings.find(x=>x.id===id);
+  if (!l) return;
+  currentListing = l;
+  const isFav = favorites.includes(l.id);
+  const priceStr = l.price.toLocaleString('ru') + ' ' + l.currency;
+  document.getElementById('detailContent').innerHTML = `
+    <div>
+      <div class="detail-imgs"><img src="${l.img}" alt="${l.title}" onerror="this.src='https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=700&q=60'"/></div>
+    </div>
+    <div class="detail-info">
+      <div class="detail-badges">
+        ${l.verified?'<span class="lc-badge b-v" style="font-size:12px;padding:5px 12px">✅ Проверено</span>':''}
+        <span class="lc-badge b-t" style="font-size:12px;padding:5px 12px">${l.type==='room'?'🛏 Комната':l.type==='apt'?'🏠 Квартира':'🏢 Студия'}</span>
+      </div>
+      <div class="detail-title">${l.title}</div>
+      <div class="detail-loc">📍 ${l.flag} ${l.city}${l.district?', '+l.district:''}</div>
+      <div class="detail-price-row">
+        <div class="detail-price">${priceStr}<em>/месяц</em></div>
+        <div style="margin-left:auto;font-size:14px;font-weight:700;color:var(--gold)">★ ${l.rating}</div>
+      </div>
+      <div class="detail-feats">
+        <div class="detail-feat">👥 ${l.roommates} ${l.roommates===1?'сосед':'соседа'}</div>
+        ${(l.amenities||[]).slice(0,4).map(a=>`<div class="detail-feat">✓ ${a}</div>`).join('')}
+      </div>
+      <div class="detail-desc">${l.desc||'Описание отсутствует'}</div>
+      <div class="detail-owner">
+        <div class="owner-avatar">${l.owner?.avatar||'👤'}</div>
+        <div>
+          <div class="owner-name">${l.owner?.name||'Владелец'}</div>
+          <div class="owner-sub">⭐ ${l.owner?.rating||4.5} · на платформе с ${l.owner?.since||'2024'}</div>
+          ${l.owner?.phone?`<div class="owner-sub">📞 ${l.owner.phone}</div>`:''}
+        </div>
+      </div>
+      <div class="detail-btns">
+        <button class="btn-contact" onclick="openContact(${l.id})">💬 Написать владельцу</button>
+        <button class="btn-fav" id="detailFavBtn" onclick="toggleFav(null,${l.id},true)">${isFav?'❤️ В избранном':'🤍 В избранное'}</button>
+      </div>
+    </div>`;
+  goPage('detail');
+}
+
+function openContact(id) {
+  if (!currentUser) { pendingPage=null; openModal('auth'); return; }
+  const l = allListings.find(x=>x.id===id)||currentListing;
+  document.getElementById('contactSub').textContent = l ? 'Объявление: '+l.title : '';
+  openModal('contact');
+}
+
+function sendContact() {
+  const msg = document.getElementById('contactMsg').value.trim();
+  if (!msg) { toast('Напиши сообщение'); return; }
+  // Save to chat
+  const ownerName = currentListing?.owner?.name || 'Владелец';
+  let chat = chatMessages.find(c=>c.with===ownerName);
+  if (!chat) {
+    chat = {id: chatMessages.length+1, with:ownerName, avatar:currentListing?.owner?.avatar||'👤', preview:msg, time:'сейчас', unread:0, msgs:[]};
+    chatMessages.push(chat);
+  }
+  chat.msgs.push({from:'me', text:msg, time:new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})});
+  chat.preview = msg;
+  localStorage.setItem('rm_chats', JSON.stringify(chatMessages));
+  closeModal('contact');
+  document.getElementById('contactMsg').value='';
+  toast('📨 Сообщение отправлено!');
+}
+
+/* ═══════════════════════════════════════
+   FAVORITES
+═══════════════════════════════════════ */
+function toggleFav(e, id, fromDetail=false) {
+  if (e) e.stopPropagation();
+  if (!currentUser) { openModal('auth'); return; }
+  const idx = favorites.indexOf(id);
+  if (idx>-1) { favorites.splice(idx,1); toast('💔 Удалено из избранного'); }
+  else { favorites.push(id); toast('❤️ Добавлено в избранное!'); }
+  localStorage.setItem('rm_favs', JSON.stringify(favorites));
+  // Update button in card
+  const btn = document.querySelector(`.lc-heart[onclick*="toggleFav(event,${id})"]`);
+  if (btn) btn.textContent = favorites.includes(id)?'❤️':'🤍';
+  // Update detail btn
+  if (fromDetail) {
+    const dbtn = document.getElementById('detailFavBtn');
+    if (dbtn) dbtn.textContent = favorites.includes(id)?'❤️ В избранном':'🤍 В избранное';
+  }
+  // Refresh profile if open
+  if (document.getElementById('page-profile').classList.contains('active')) renderProfile();
+  // Sync Supabase
+  if (currentUser?.id && SUPABASE_URL!=='https://YOUR_PROJECT.supabase.co') {
+    if (favorites.includes(id)) supa.insert('favorites',{user_id:currentUser.id,listing_id:id}).catch(()=>{});
+    else supa.req(`/rest/v1/favorites?user_id=eq.${currentUser.id}&listing_id=eq.${id}`,{method:'DELETE'}).catch(()=>{});
+  }
+}
+
+/* ═══════════════════════════════════════
+   ADD LISTING
+═══════════════════════════════════════ */
+function doAddListing() {
+  if (!currentUser) { closeModal('addListing'); openModal('auth','reg'); return; }
+  const title = document.getElementById('addTitle').value.trim();
+  const city  = document.getElementById('addCity').value.trim();
+  const price = parseInt(document.getElementById('addPrice').value)||0;
+  const type  = document.getElementById('addType').value;
+  const desc  = document.getElementById('addDesc').value.trim();
+  const flag  = document.getElementById('addCountry').value;
+  const r     = parseInt(document.getElementById('addRoommates').value)||1;
+  const dist  = document.getElementById('addDistrict').value.trim();
+  const img   = document.getElementById('addImg').value.trim() || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=700&q=70';
+  if (!title || !city || !price) { showErr('addErr','Заполни заголовок, город и цену'); return; }
+  const currencies={'🇰🇿':'₸','🇷🇺':'₽','🇺🇿':'сум','🇰🇬':'сом','🇧🇾':'Br'};
+  const newL = {
+    id: Date.now(), type, city, flag, title, price,
+    currency: currencies[flag]||'₸', roommates:r, rating:4.5,
+    verified:false, newL:true, district:dist, desc, img,
+    owner:{name:currentUser.name, avatar:'👤', phone:currentUser.phone||'', rating:4.5, since:new Date().getFullYear().toString()}
+  };
+  userListings.push(newL);
+  allListings = [...MOCK_LISTINGS, ...userListings];
+  filteredListings = [...allListings];
+  localStorage.setItem('rm_mylistings', JSON.stringify(userListings));
+  // Supabase
+  if (currentUser?.id && SUPABASE_URL!=='https://YOUR_PROJECT.supabase.co') {
+    supa.insert('listings',{...newL,user_id:currentUser.id}).catch(()=>{});
+  }
+  closeModal('addListing');
+  // clear form
+  ['addTitle','addCity','addPrice','addDesc','addImg','addDistrict'].forEach(id=>document.getElementById(id).value='');
+  toast('🎉 Объявление опубликовано!');
+  goPage('listings');
+}
+
+/* ═══════════════════════════════════════
+   PROFILE
+═══════════════════════════════════════ */
+function renderProfile() {
+  if (!currentUser) return;
+  document.getElementById('profileName').textContent = currentUser.name || 'Пользователь';
+  document.getElementById('profileEmail').textContent = currentUser.email || '';
+  document.getElementById('settingsEmail').value = currentUser.email || '';
+  document.getElementById('settingsName').value = currentUser.name || '';
+  document.getElementById('settingsPhone').value = currentUser.phone || '';
+  // Favorites
+  allListings = [...MOCK_LISTINGS, ...userListings];
+  const favListings = allListings.filter(l=>favorites.includes(l.id));
+  const favGrid = document.getElementById('favGrid');
+  const favEmpty= document.getElementById('favEmpty');
+  if (favListings.length) {
+    favGrid.innerHTML = favListings.map((l,i)=>cardHTML(l,i)).join('');
+    favEmpty.classList.add('hidden');
+  } else { favGrid.innerHTML=''; favEmpty.classList.remove('hidden'); }
+  // My listings
+  const myGrid  = document.getElementById('myListingsGrid');
+  const myEmpty = document.getElementById('myListingsEmpty');
+  if (userListings.length) {
+    myGrid.innerHTML = userListings.map((l,i)=>cardHTML(l,i)).join('');
+    myEmpty.classList.add('hidden');
+  } else { myGrid.innerHTML=''; myEmpty.classList.remove('hidden'); }
+}
+
+function switchPTab(el, name) {
+  document.querySelectorAll('.p-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.p-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('p-'+name).classList.add('active');
+}
+
+function saveSettings() {
+  currentUser.name  = document.getElementById('settingsName').value.trim();
+  currentUser.phone = document.getElementById('settingsPhone').value.trim();
+  localStorage.setItem('rm_user', JSON.stringify(currentUser));
+  document.getElementById('profileName').textContent = currentUser.name;
+  toast('✅ Настройки сохранены!');
+}
+
+/* ═══════════════════════════════════════
+   CHAT
+═══════════════════════════════════════ */
+function renderChatList() {
+  const list = document.getElementById('chatList');
+  list.innerHTML = chatMessages.map(c=>`
+    <div class="chat-item ${currentChat===c.id?'active':''}" onclick="openChatWith(${c.id})">
+      <div class="chat-avatar">${c.avatar}</div>
+      <div style="flex:1;overflow:hidden">
+        <div class="chat-name">${c.with}</div>
+        <div class="chat-preview">${c.preview}</div>
+      </div>
+      <div>
+        <div class="chat-time">${c.time}</div>
+        ${c.unread?`<div class="chat-unread">${c.unread}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function openChatWith(id) {
+  currentChat = id;
+  const chat = chatMessages.find(c=>c.id===id);
+  if (!chat) return;
+  chat.unread = 0;
+  localStorage.setItem('rm_chats', JSON.stringify(chatMessages));
+  renderChatList();
+  const main = document.getElementById('chatMain');
+  main.innerHTML = `
+    <div class="chat-main-header">
+      <div class="chat-avatar" style="width:38px;height:38px;font-size:18px">${chat.avatar}</div>
+      <div>
+        <div class="chat-main-name">${chat.with}</div>
+        <div class="chat-main-status">Онлайн</div>
+      </div>
+    </div>
+    <div class="chat-messages" id="msgs"></div>
+    <div class="chat-input-row">
+      <input class="chat-input" id="chatInput" placeholder="Написать сообщение..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg(${id})}"/>
+      <button class="chat-send" onclick="sendMsg(${id})">➤</button>
+    </div>`;
+  renderMsgs(chat);
+}
+
+function renderMsgs(chat) {
+  const container = document.getElementById('msgs');
+  if (!container) return;
+  container.innerHTML = chat.msgs.map(m=>`
+    <div class="msg ${m.from==='me'?'mine':'theirs'}">
+      <div class="msg-bubble">${m.text}</div>
+      <div class="msg-time">${m.time}</div>
+    </div>`).join('');
+  container.scrollTop = container.scrollHeight;
+}
+
+function sendMsg(chatId) {
+  const input = document.getElementById('chatInput');
+  const text = input?.value.trim();
+  if (!text) return;
+  const chat = chatMessages.find(c=>c.id===chatId);
+  if (!chat) return;
+  const time = new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+  chat.msgs.push({from:'me', text, time});
+  chat.preview = text;
+  chat.time = time;
+  input.value='';
+  localStorage.setItem('rm_chats', JSON.stringify(chatMessages));
+  renderMsgs(chat);
+  renderChatList();
+  // Auto-reply after 1.5s
+  setTimeout(() => {
+    const replies = ['Здравствуйте! Да, ещё актуально 😊','Конечно! Когда вам удобно посмотреть?','Хорошо, договорились!','Напишите в WhatsApp, так быстрее отвечу'];
+    chat.msgs.push({from:'them', text: replies[Math.floor(Math.random()*replies.length)], time: new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})});
+    chat.preview = chat.msgs[chat.msgs.length-1].text;
+    localStorage.setItem('rm_chats', JSON.stringify(chatMessages));
+    renderMsgs(chat);
+    renderChatList();
+  }, 1500);
+}
+
+/* ═══════════════════════════════════════
+   HOME SEARCH
+═══════════════════════════════════════ */
+function doHomeSearch() {
+  const q = document.getElementById('homeSearch').value.trim();
+  const type = document.getElementById('homeType').value;
+  allListings = [...MOCK_LISTINGS, ...userListings];
+  filteredListings = allListings.filter(l => {
+    if (type && l.type!==type) return false;
+    if (q && !l.city.toLowerCase().includes(q.toLowerCase()) && !l.title.toLowerCase().includes(q.toLowerCase())) return false;
+    return true;
+  });
+  goPage('listings');
+}
+
+function quickCity(el, city) {
+  document.querySelectorAll('.s-tag').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('homeSearch').value = city;
+  allListings = [...MOCK_LISTINGS, ...userListings];
+  filteredListings = city ? allListings.filter(l=>l.city===city) : [...allListings];
+  if (document.getElementById('page-listings').classList.contains('active')) renderListings(filteredListings);
+}
+
+/* ═══════════════════════════════════════
+   FEATURES + TESTI DATA
+═══════════════════════════════════════ */
+const FEATS = [
+  {ico:'🛡️',title:'Только проверенные объявления',desc:'Каждое объявление проходит модерацию. Паспортная проверка защищает от мошенников.'},
+  {ico:'🤖',title:'Умный подбор соседей',desc:'Алгоритм анализирует образ жизни и интересы — и находит совместимых соседей.'},
+  {ico:'💬',title:'Встроенный мессенджер',desc:'Безопасно общайся с арендодателями и соседями прямо на платформе.'},
+  {ico:'🌍',title:'Охват всего СНГ',desc:'КЗ, РФ, УЗ, КГ, БЛ, УА, АЗ, ГЕ, АМ — 9 стран в одной платформе.'},
+  {ico:'📱',title:'Удобно на телефоне',desc:'Полная поддержка мобильных устройств — iOS, Android и браузер.'},
+  {ico:'📄',title:'Помощь с договором',desc:'Шаблоны договоров на русском с учётом законов каждой страны СНГ.'},
+];
+const TESTIS = [
+  {stars:5,text:'"Переехала из Алматы в Москву на стажировку. RoomMate нашёл мне проверенную соседку за 2 дня."',name:'Айгерим К.',loc:'Алматы → Москва',av:'https://i.pravatar.cc/60?img=20'},
+  {stars:5,text:'"Искал комнату рядом с КНУ. Нашёл через RoomMate за неделю. Сосед оказался отличным человеком."',name:'Бакыт Э.',loc:'Ош → Бишкек',av:'https://i.pravatar.cc/60?img=33'},
+  {stars:5,text:'"Разместил квартиру в Ташкенте — получил 18 заявок за сутки. Отличная платформа!"',name:'Шохрух Н.',loc:'Ташкент, Узбекистан',av:'https://i.pravatar.cc/60?img=47'},
+];
+
+function renderStaticSections() {
+  document.getElementById('featsGrid').innerHTML = FEATS.map((f,i)=>`
+    <div class="feat-card reveal" style="animation-delay:${i*.07}s">
+      <div class="feat-ico">${f.ico}</div>
+      <div class="feat-title">${f.title}</div>
+      <div class="feat-desc">${f.desc}</div>
+    </div>`).join('');
+  document.getElementById('testiGrid').innerHTML = TESTIS.map(t=>`
+    <div class="tc">
+      <div class="tc-stars">${'★'.repeat(t.stars)}</div>
+      <div class="tc-text">${t.text}</div>
+      <div class="tc-auth"><img class="tc-av" src="${t.av}" alt="${t.name}"/>
+        <div><div class="tc-name">${t.name}</div><div class="tc-loc">📍 ${t.loc}</div></div>
+      </div>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════
+   STATS COUNTER
+═══════════════════════════════════════ */
+const sO=new IntersectionObserver(e=>{
+  if(e[0].isIntersecting){
+    document.querySelectorAll('.cnt').forEach(el=>{
+      const t=parseInt(el.dataset.t);let c=0;const st=t/60;
+      const iv=setInterval(()=>{c=Math.min(c+st,t);el.textContent=Math.round(c);if(c>=t)clearInterval(iv);},20);
+    });sO.disconnect();
+  }
+},{threshold:.3});
+const statsEl=document.querySelector('.stats-section');
+if(statsEl)sO.observe(statsEl);
+
+/* REVEAL */
+const rO=new IntersectionObserver(e=>e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('vis');}),{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>rO.observe(el));
+
+/* NAV SCROLL */
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('sc',scrollY>30));
+
+/* MOBILE MENU */
+function toggleMob(){document.getElementById('mobMenu').classList.toggle('open');}
+
+/* TOAST */
+let tT;
+function toast(msg){
+  const el=document.getElementById('toastEl');
+  document.getElementById('toastMsg').textContent=msg;
+  el.classList.add('show');clearTimeout(tT);
+  tT=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+/* FORM HELPERS */
+function showErr(id, msg) { const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; }
+function hideErr(id) { document.getElementById(id).style.display='none'; }
+
+/* LOADER */
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    document.getElementById('loader').classList.add('hide');
+    setTimeout(()=>document.getElementById('loader').remove(),500);
+  },1200);
+});
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+updateNavAuth();
+renderStaticSections();
+allListings = [...MOCK_LISTINGS, ...userListings];
+filteredListings = [...allListings];
+if (currentUser) {
+  document.getElementById('profileName').textContent = currentUser.name||'';
+  document.getElementById('profileEmail').textContent = currentUser.email||'';
+}
+// Re-observe after dynamic render
+setTimeout(()=>{
+  document.querySelectorAll('.reveal').forEach(el=>rO.observe(el));
+},100);
+</script>
+</body>
+</html>
